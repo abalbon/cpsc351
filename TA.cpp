@@ -24,12 +24,12 @@ int CurrentIndex = 0;
  //Mutex Lock used:
 //To lock and unlock variable ChairsCount to increment and decrement its value.
  
- //hint: use sem_t and pthread_mutex_t
- 
- 
+ //hint: use sem_t and pthread_mutex_t 
  */
 
-
+sem_t semStu;
+sem_t semTa;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //Declared Functions
 void *TA_Activity();
@@ -47,7 +47,15 @@ int main(int argc, char* argv[])
      //hint: use sem_init() and pthread_mutex_init()
      
      */
-	
+	 sem_init(&semStu, 0, 1);
+	 sem_init(&semTa,0 ,0);
+	 pthread_mutex_init(&mutex, NULL);
+
+	pthread_t threadID
+	pthread_attr_t attributes;
+
+	pthread_attr_init(&attributes);
+
 	if(argc<2)
 	{
 		printf("Number of Students not specified. Using default (5) students.\n");
@@ -57,6 +65,7 @@ int main(int argc, char* argv[])
 	{
 		printf("Number of Students specified. Creating %d threads.\n", number_of_students);
 		number_of_students = atoi(argv[1]);
+		int nunm_of_threads = number_of_students + 1;
 	}
 		
 	//Allocate memory for Students
@@ -65,7 +74,21 @@ int main(int argc, char* argv[])
     /*TODO
 	//Creating one TA thread and N Student threads.
      //hint: use pthread_create
+	 */
+	 int i = 0;
+	pthread_create(&threadID[i], &attributes, TA_Activity, NULL);
 
+	for(int j = 1; j < number_of_students + 1, j++) {
+		pthread_create(&threadID[j], &attr, student, (void*)i);
+	}
+
+	for(u=0;i< number_of_students + 1; i++) {
+		pthread_join(threadID[i], NULL);
+	}
+	return 0;
+}
+
+	/*
 	//Waiting for TA thread and N Student threads.
      //hint: use pthread_join
      
