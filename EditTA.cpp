@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	pthread_mutex_init(&openChair, NULL);
 
 	for (id = 0; id < 3; ++id) {
-		sem_init(&semChair[3], 0, 0);
+		sem_init(&semChair[id], 0, 0);
 	}
 
 	if (argc < 2)
@@ -118,9 +118,6 @@ void* TA_Activity()
 
 void* Student_Activity(void* threadID)
 {
-	//TODO
-	int StuTime;
-
 	while (1) {
 		//Student  needs help from the TA
 		pthread_mutex_lock(&openChair);
@@ -134,7 +131,7 @@ void* Student_Activity(void* threadID)
 				sem_post(&semTa);
 
 			//lock
-			pthread_mutex_lock(&openChair)
+			pthread_mutex_lock(&openChair);
 				int index = (CurrentIndex + ChairsCount) % 3;
 			ChairsCount++;
 			//unlock
@@ -143,7 +140,7 @@ void* Student_Activity(void* threadID)
 			//Student leaves his/her chair
 			sem_wait(&semChair[index]);
 			//Student  is getting help from the TA
-			printf("Student is getting help from the TA\n", (long)threadID);
+			printf("Student is getting help from the TA\n");
 			//Student waits to go next.
 			sem_wait(&semStu);
 			//Student left TA room
@@ -152,7 +149,7 @@ void* Student_Activity(void* threadID)
 		else {
 			//If student didn't find any chair to sit on.
 			//Student will return at another time
-			printf("Student will return another time since all chairs are occupied\n", (long)threadID);
+			printf("Student will return another time since all chairs are occupied\n");
 		}
 	}
 
