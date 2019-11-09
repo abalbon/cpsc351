@@ -11,8 +11,6 @@ pthread_t TA;				//Separate Thread for TA.
 int ChairsCount = 0;
 int CurrentIndex = 0;
 
-
-
 //Declaration of Semaphores and Mutex Lock.
 //Semaphores used:
 //A semaphore to signal and wait TA's sleep.
@@ -27,7 +25,6 @@ sem_t nextStu;
 pthread_mutex_t openChair;
 
 int number_of_students;
-
 
 //Declared Functions
 void* TA_Activity(void* i);
@@ -109,7 +106,7 @@ void* TA_Activity(void*)
 			pthread_mutex_unlock(&openChair);
 
 			//TA is currently helping the student
-			printf("TA is currently helping student %d\n", CurrentIndex + 1);
+			printf("TA is currently helping student %d\n", CurrentIndex);
 			sleep(5);
 			sem_post(&nextStu);
 			usleep(10);
@@ -120,17 +117,16 @@ void* TA_Activity(void*)
 
 void* Student_Activity(void* threadID)
 {	
-	int index = (CurrentIndex + ChairsCount) % 3;
+	printf("Student %d Enters room\n", CurrentIndex);
 	while (CurrentIndex < number_of_students) {
-		printf("Student %d Enters room\n", CurrentIndex + 1);
 		//Student tried to sit on a chair.
 		//Student  needs help from the TA
 		int chairs = ChairsCount;
 		if (chairs < 3) {
+			int index = (CurrentIndex + ChairsCount) % 3; 
 			//If student sits on first empty chair then wake the TA
 			if (chairs == 0) {
 				printf("Student %d wakes TA\n", CurrentIndex + 1);
-				ChairsCount++;	
 				sem_post(&taSleep);
 			} else {
 				//lock
