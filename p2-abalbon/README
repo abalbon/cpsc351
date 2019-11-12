@@ -1,0 +1,42 @@
+CPSC 351-01 Section 13411
+Homework Assignment 2
+
+Albert Balbon		abalbon@csu.fullerton.edu
+Tanis Yusico-Suarez	tanisys@csu.fullerton.edu
+Alisha Manookian	alishamanookian@csu.fullerton.edu
+Stephano Nguyen		nguyen.stephano@csu.fullerton.edu
+
+Programming Language Used: C++
+IDE Used: Visual Studio Code
+Platform Used: Linux/Tuffix
+
+Contents:
+TA.cpp
+Screenshot of test output
+Makefile
+README
+Design of the Sleeping TA
+
+Object and executable code not included in submission, in order to execute, it will need to be compiled again
+
+How to compile:
+1. In one terminal, go to the directory where the project file is located (in my case it is under a directory called
+	p2-abalbon)
+2. enter "make all"
+	- This will compile the TA.cpp file
+	- This will also take into account in linking -pthread library
+	- if there is no make file included, simply enter: gcc -pthread TA.cpp
+3. After compilation, an executable titled TASync will be creater
+4. enter "./TASync"
+	- This will execute the TA.cpp program
+	- To enter a specific number of students simply add a number at the end of the command ie: ./TASync 4
+5. The terminal will output the appropriate result.
+6. To terminate the program, enter ctrl+c
+
+Group Contribution
+Prior to dividing our group into subgroups, we collaborated in determining the design of the process synchronization for
+the sleeping Teaching Assistant program. We then divided into two different subgroups to figure out each function that was
+within the TA.cpp file. Stephano and Tanis were primarily focused on the TA_Activity function and figuring out how the
+TA processes were suppose to work. On the other hand Albert and Alisha focused their efforts on the Student_Activity and
+how to manage each student thread. Everyone collaborated in the beginning during the design phase as well as completing the
+main function of the cpp file where everything was declared and initialized
