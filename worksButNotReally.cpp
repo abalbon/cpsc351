@@ -10,7 +10,6 @@ pthread_t TA;				//Separate Thread for TA.
 
 int ChairsCount = 0;
 int CurrentIndex = 0;
-int waitingStudents = 0;
 
 const int NUM_CHAIRS = 3;
 
@@ -20,7 +19,7 @@ const int NUM_CHAIRS = 3;
 //Semaphores used:
 //A semaphore to signal and wait TA's sleep.
 sem_t taSleep;
-sem_t taOutChairs[3];
+sem_t taOutChairs;
 sem_t taInChair;
 //An array of 3 semaphores to signal and wait chair to wait for the TA.
 //A semaphore to signal and wait for TA's next student.
@@ -46,11 +45,9 @@ int main(int argc, char* argv[])
 
 	sem_init(&taSleep, 0, 0);
 
-	for(int i = 0; i < NUM_CHAIRS; i++) {
-		sem_init(&taOutChairs[i],0 ,0);
-	}
+	sem_init(&taOutChairs, 0, 3);
 
-	sem_init(&taInChair, 0, 0);
+	sem_init(&taInChair, 0, 1);
 
 	if(argc<2)
 	{
@@ -84,7 +81,6 @@ int main(int argc, char* argv[])
 		 pthread_join(Students[i], NULL);
 	 }
 
-
 	//Free allocated memory
 	free(Students);
 	return 0;
@@ -92,81 +88,72 @@ int main(int argc, char* argv[])
 
 void* TA_Activity(void *i)
 {
-	int cInd = (CurrentIndex + ChairsCount) % 3;
     // TODO
 	//TA is currently sleeping.
 	printf("TA is currently asleep\n");
+	sleep(2);
 	sem_wait(&taSleep);
-	printf("Student woke up TA\n");
+	printf("Student %d woke up TA\n", CurrentIndex);
 
 	while(true) {
-    // lock
-	pthread_mutex_lock(&chairMutex);
-    //if chairs are empty, break the loop.
-	if(ChairsCount == 0) {
-		pthread_mutex_unlock(&chairMutex);
-		break;
-	}
-	//TA gets next student on chair.
-	ChairsCount--;
-	sem_post(&taOutChairs[cInd]);
-	//unlock
-	pthread_mutex_unlock(&chairMutex);
+	    // lock
+		pthread_mutex_lock(&chairMutex);
+	    //if chairs are empty, break the loop.
+		if(ChairsCount == 0) {
+			pthread_mutex_unlock(&chairMutex);
+		} else {
+			//TA gets next student on chair.
+			ChairsCount--;
+			//unlock
+			pthread_mutex_unlock(&chairMutex);
+		}
 
-	//TA is currently helping the student
-    printf("TA is helping a student\n");
-	sleep(2);
-	sem_post(&taInChair);
-	 //hint: use sem_wait(); sem_post(); pthread_mutex_lock(); pthread_mutex_unlock()
-	}
+		sem_post(&taOutChairs);
+		//TA is currently helping the student
+		sem_post(&taInChair);
+
+		 //hint: use sem_wait(); sem_post(); pthread_mutex_lock(); pthread_mutex_unlock()
+		}
 }
 
 void* Student_Activity(void *threadID)
 {
     //TODO
-    while(true) {
-		//Student  needs help from the TA
-		printf("Student %d enters room\n", (long)threadID);
-		sleep(5);
+	//Student  needs help from the TA
+	printf("Student %d enters room\n", (long)threadID);
+	sleep(5);
 
-		pthread_mutex_lock(&chairMutex);
-		int c = ChairsCount;
-		pthread_mutex_unlock(&chairMutex);
+	//Student tried to sit on a chair.
+	if (ChairsCount < 3) {
+		if(ChairsCount == 0){
+			//wake up the TA.
+			sem_post(&taSleep);
+   		} else {
+			printf("Student %d waits in outside chair\n",(long) threadID);
 
-
-		//Student tried to sit on a chair.
-		if (c < 3) {
-			if(c == 0){
-				//wake up the TA.
-				sem_post(&taSleep);
-      }
-
-      else
-        printf("Student %d waits in outside chair\n",(long) threadID);
-
-
-			int i = (CurrentIndex + ChairsCount) % 3;
 			// lock
 			pthread_mutex_lock(&chairMutex);
 			ChairsCount++;
-			pthread_mutex_unlock(&chairMutex);
 			// unlock
-			//Student leaves his/her chair.
-			sem_wait(&taOutChairs[i]);
-			printf("Student left chair\n");
-			//Student  is getting help from the TA
-			//Student waits to go next.
-			sem_wait(&taInChair);
-			//Student left TA room
-			printf("Student %d has left\n", (long) threadID);
-			CurrentIndex++;
-    }
-	  else {
+			pthread_mutex_unlock(&chairMutex);
+		}
+
+		//Student leaves his/her chair.
+		sem_wait(&taOutChairs);
+		printf("Student %d left chair\n", (long) threadID);
+		//Student  is getting help from the TA
+		printf("TA is helping student\n");
+
+		//Student waits to go next.
+		sem_wait(&taInChair);
+		//Student left TA room
+		printf("Student %d has left\n", (long) threadID);
+
+    } else {
     //If student didn't find any chair to sit on.
     //Student will return at another time
 		printf("Student %d will return later\n", (long) threadID);
 		sleep(15);
-		}
-     //hint: use sem_wait(); sem_post(); pthread_mutex_lock(); pthread_mutex_unlock()
 	}
+     //hint: use sem_wait(); sem_post(); pthread_mutex_lock(); pthread_mutex_unlock()
 }
