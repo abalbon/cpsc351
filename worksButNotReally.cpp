@@ -101,13 +101,13 @@ void* TA_Activity(void *i)
 	    //if chairs are empty, break the loop.
 		if(ChairsCount == 0) {
 			pthread_mutex_unlock(&chairMutex);
-		} else {
-			//TA gets next student on chair.
-			ChairsCount--;
-			//unlock
-			pthread_mutex_unlock(&chairMutex);
 		}
-
+		
+		//TA gets next student on chair.
+		ChairsCount--;
+		//unlock
+		pthread_mutex_unlock(&chairMutex);
+				
 		sem_post(&taOutChairs);
 		//TA is currently helping the student
 		sem_post(&taInChair);
@@ -118,17 +118,19 @@ void* TA_Activity(void *i)
 
 void* Student_Activity(void *threadID)
 {
-    //TODO
+	   //TODO
 	//Student  needs help from the TA
 	printf("Student %d enters room\n", (long)threadID);
-	sleep(5);
-
-	//Student tried to sit on a chair.
-	if (ChairsCount < 3) {
-		if(ChairsCount == 0){
-			//wake up the TA.
-			sem_post(&taSleep);
-   		} else {
+	
+	while(true) {
+		//Student tried to sit on a chair.
+		if (ChairsCount < 3) {
+			if(ChairsCount == 0){
+				//wake up the TA.
+				sem_post(&taSleep);
+	   		}
+			//Student leaves his/her chair.
+			sem_wait(&taOutChairs);
 			printf("Student %d waits in outside chair\n",(long) threadID);
 
 			// lock
@@ -136,24 +138,25 @@ void* Student_Activity(void *threadID)
 			ChairsCount++;
 			// unlock
 			pthread_mutex_unlock(&chairMutex);
+
+			sleep(2);
+			printf("Student %d left chair\n", (long) threadID);
+			//Student  is getting help from the TA
+			printf("TA is helping student\n");
+
+			//Student waits to go next.
+			sem_wait(&taInChair);
+			//Student left TA room
+			printf("Student %d has left\n", (long) threadID);
+			break;
+
+	    } else {
+	    //If student didn't find any chair to sit on.
+	    //Student will return at another time
+			printf("Student %d will return later\n", (long) threadID);
+			sleep(10);
 		}
-
-		//Student leaves his/her chair.
-		sem_wait(&taOutChairs);
-		printf("Student %d left chair\n", (long) threadID);
-		//Student  is getting help from the TA
-		printf("TA is helping student\n");
-
-		//Student waits to go next.
-		sem_wait(&taInChair);
-		//Student left TA room
-		printf("Student %d has left\n", (long) threadID);
-
-    } else {
-    //If student didn't find any chair to sit on.
-    //Student will return at another time
-		printf("Student %d will return later\n", (long) threadID);
-		sleep(15);
 	}
+
      //hint: use sem_wait(); sem_post(); pthread_mutex_lock(); pthread_mutex_unlock()
 }
